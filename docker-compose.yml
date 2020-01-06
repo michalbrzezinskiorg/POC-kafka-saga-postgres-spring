@@ -56,7 +56,7 @@ services:
       - BOOTSTRAP_SERVERS=kafka1:9091,kafka2:9092,kafka3:9093,kafka4:9094,kafka5:9095
       - ZOOKEEPER=localhost:2181
     volumes:
-      - ../kafka/kafka1:/var/lib/kafka/data
+      - ./kafka/kafka1:/var/lib/kafka/data
   kafka2:
     image: confluentinc/cp-kafka
     depends_on:
@@ -71,7 +71,7 @@ services:
       - BOOTSTRAP_SERVERS=kafka1:9091,kafka2:9092,kafka3:9093,kafka4:9094,kafka5:9095
       - ZOOKEEPER=zookeeper:2181
     volumes:
-      - ../kafka/kafka2:/var/lib/kafka/data
+      - ./kafka/kafka2:/var/lib/kafka/data
   kafka3:
     image: confluentinc/cp-kafka
     depends_on:
@@ -86,7 +86,7 @@ services:
       - BOOTSTRAP_SERVERS=kafka1:9091,kafka2:9092,kafka3:9093,kafka4:9094,kafka5:9095
       - ZOOKEEPER=zookeeper:2181
     volumes:
-      - ../kafka/kafka3:/var/lib/kafka/data
+      - ./kafka/kafka3:/var/lib/kafka/data
   kafka4:
     image: confluentinc/cp-kafka
     depends_on:
@@ -101,7 +101,7 @@ services:
       - BOOTSTRAP_SERVERS=kafka1:9091,kafka2:9092,kafka3:9093,kafka4:9094,kafka5:9095
       - ZOOKEEPER=zookeeper:2181
     volumes:
-      - ../kafka/kafka4:/var/lib/kafka/data
+      - ./kafka/kafka4:/var/lib/kafka/data
   kafka5:
     image: confluentinc/cp-kafka
     depends_on:
@@ -116,5 +116,5 @@ services:
       - BOOTSTRAP_SERVERS=kafka1:9091,kafka2:9092,kafka3:9093,kafka4:9094,kafka5:9095
       - ZOOKEEPER=zookeeper:2181
     volumes:
-      - ../kafka/kafka5:/var/lib/kafka/data
+      - ./kafka/kafka5:/var/lib/kafka/data
 
