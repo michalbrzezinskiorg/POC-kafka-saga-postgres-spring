@@ -14,8 +14,8 @@ public class SpreadrApplication {
 
     static {
         INSTANCE_ID = Base64.getEncoder()
-                .encodeToString((
-                        System.getenv("INSTANCE")
+                .encodeToString(
+                        (System.getenv("INSTANCE")
                                 + "_runtimeId:" + UUID.randomUUID()
                                 + "_runtimeZonedDateTime:"
                                 + ZonedDateTime.now().toString())
