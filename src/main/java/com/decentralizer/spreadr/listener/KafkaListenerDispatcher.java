@@ -1,6 +1,6 @@
 package com.decentralizer.spreadr.listener;
 
-import com.decentralizer.spreadr.configuration.KafkaMessage;
+import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import com.decentralizer.spreadr.service.MorphService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

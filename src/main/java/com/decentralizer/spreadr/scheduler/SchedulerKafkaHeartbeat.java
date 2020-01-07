@@ -1,6 +1,6 @@
 package com.decentralizer.spreadr.scheduler;
 
-import com.decentralizer.spreadr.configuration.KafkaMessage;
+import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
 import com.decentralizer.spreadr.service.MorphService;
 import lombok.RequiredArgsConstructor;

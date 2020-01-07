@@ -1,6 +1,5 @@
-package com.decentralizer.spreadr.configuration;
+package com.decentralizer.spreadr.data.kafkaDTO;
 
-import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
 import lombok.Data;
 
 @Data

@@ -1,5 +1,6 @@
 package com.decentralizer.spreadr.configuration;
 
+import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClientConfig;
@@ -29,7 +30,8 @@ import static org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_
 @EnableKafka
 @Slf4j
 public class ConfigurationKafka {
-
+    @Value(value = "${kafka.deserializer.trustedpackages}")
+    private String TRUSTED_PACKGES;
     @Value(value = "${kafka.broker}")
     private String bootstrapAddress;
 
@@ -65,7 +67,7 @@ public class ConfigurationKafka {
         props.put(AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
         props.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(SESSION_TIMEOUT_MS_CONFIG, "15000");
-        props.put(JsonDeserializer.TRUSTED_PACKAGES, "com.decentralizer.spreadr.configuration,com.decentralizer.spreadr.data");
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, TRUSTED_PACKGES);
         props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, KafkaMessage.class);
         return new DefaultKafkaConsumerFactory<>(props);
     }

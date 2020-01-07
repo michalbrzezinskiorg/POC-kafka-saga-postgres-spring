@@ -1,8 +1,8 @@
 package com.decentralizer.spreadr.service;
 
-import com.decentralizer.spreadr.configuration.KafkaMessage;
 import com.decentralizer.spreadr.data.MorphRepository;
 import com.decentralizer.spreadr.data.entities.Morph;
+import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
 import com.decentralizer.spreadr.data.requestDTO.RequestMorph;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,3 @@
-HELP.md
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
@@ -27,5 +26,11 @@ target/
 /.nb-gradle/
 build/
 
+### docker containers ###
+.kafka
+.postgres_data
+
 ### VS Code ###
 .vscode/
+
+
