@@ -27,10 +27,12 @@ target/
 build/
 
 ### docker containers ###
-.kafka
-.postgres_data
+
+/kafka/
+/postgres_data/
+.kafka/**
+.postgres_data/**
 
 ### VS Code ###
 .vscode/
-
 
