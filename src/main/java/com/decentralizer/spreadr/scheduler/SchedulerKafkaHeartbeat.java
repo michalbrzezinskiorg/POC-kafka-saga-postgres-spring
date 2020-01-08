@@ -29,7 +29,7 @@ public class SchedulerKafkaHeartbeat {
         morph.setFrom(INSTANCE_ID);
         morph.setTo(UUID.randomUUID().toString());
         morph.setUuid(UUID.randomUUID().toString());
-        KafkaMessage kafkaMessage = new KafkaMessage();
+        KafkaMessage<MorphDTOK> kafkaMessage = new KafkaMessage<>();
         kafkaMessage.setPayload(morph);
         kafkaMessage.setType("morph");
         if (counter++ > 3) {
