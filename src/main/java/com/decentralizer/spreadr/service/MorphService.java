@@ -22,7 +22,7 @@ import javax.transaction.Transactional;
 @Slf4j
 public class MorphService {
 
-    public static final String MORPH_TOPIC = "morph";
+    public static final String MAIN_TOPIC = "morph";
     private final MorphRepository morphRepository;
     private final KafkaTemplate<String, KafkaMessage> morphDTOKKafkaTemplate;
     private final ModelMapper modelMapper;
@@ -43,10 +43,10 @@ public class MorphService {
 
     public void sendOnKafka(MorphDTOK morphDTOK) {
         KafkaMessage kafkaMessage = new KafkaMessage();
-        kafkaMessage.setType(MORPH_TOPIC);
+        kafkaMessage.setType(MAIN_TOPIC);
         kafkaMessage.setPayload(morphDTOK);
         ListenableFuture<SendResult<String, KafkaMessage>> handler
-                = morphDTOKKafkaTemplate.send(MORPH_TOPIC, kafkaMessage);
+                = morphDTOKKafkaTemplate.send(MAIN_TOPIC, kafkaMessage);
         addCallback(handler);
     }
 
