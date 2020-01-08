@@ -80,7 +80,10 @@ public class SagaService {
     }
 
     private boolean shouldCompensate(String eventId) {
-        return !compensations.containsKey(eventId);
+        boolean res = !compensations.containsKey(eventId);
+        if (!res)
+            log.error("found {} duplicates of compensation process... should we handle it somehow?", compensations.size());
+        return res;
     }
 
     private void handle(OrderDTOK orderDTOK, boolean b) {
