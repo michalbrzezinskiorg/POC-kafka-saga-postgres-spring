@@ -52,7 +52,7 @@ public class ConfigurationKafka {
     }
 
     @Bean
-    public KafkaTemplate<String, KafkaMessage> kafkaTemplate() {
+    public KafkaTemplate kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
@@ -68,7 +68,6 @@ public class ConfigurationKafka {
         props.put(AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(SESSION_TIMEOUT_MS_CONFIG, "15000");
         props.put(JsonDeserializer.TRUSTED_PACKAGES, TRUSTED_PACKGES);
-        props.put(JsonDeserializer.VALUE_DEFAULT_TYPE, KafkaMessage.class);
         return new DefaultKafkaConsumerFactory<>(props);
     }
 

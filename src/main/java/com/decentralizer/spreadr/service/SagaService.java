@@ -3,15 +3,14 @@ package com.decentralizer.spreadr.service;
 import com.decentralizer.spreadr.data.kafkaDTO.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jvnet.hk2.annotations.Service;
-import org.modelmapper.ModelMapper;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.decentralizer.spreadr.service.MorphService.MAIN_TOPIC;
+import static com.decentralizer.spreadr.SpreadrApplication.MAIN_TOPIC;
 
 @Service
 @RequiredArgsConstructor
@@ -20,14 +19,14 @@ public class SagaService {
 
     public static final String ORDER_TYPE = "order";
     private final KafkaTemplate<String, KafkaMessage> kafkaTemplate;
-    private final ModelMapper modelMapper;
+    private final SagaHandlers handlers;
     private final Map<String, LocalDateTime> compensations = new ConcurrentHashMap<>();
 
     public void sendInitOrderOnKafka(OrderDTOK orderDTOK) {
-        kafkaTemplate.send(MAIN_TOPIC, new KafkaMessage<>(ORDER_TYPE, orderDTOK));
+        kafkaTemplate.send(MAIN_TOPIC, orderDTOK);
     }
 
-    public void handleSaga(OrderDTOK orderDTOK) {
+    public void handleOrderDTOK(OrderDTOK orderDTOK) {
         if (orderDTOK.getCompensation()) handleCompensation(orderDTOK);
         else handle(orderDTOK, false);
     }
@@ -37,46 +36,20 @@ public class SagaService {
             handle(orderDTOK, true);
     }
 
-    public void handleSaga(PaymentDTOK paymentDTOK) {
+    public void handlePaymentDTOK(PaymentDTOK paymentDTOK) {
         if (validationForPayment(paymentDTOK))
-            handleOperation(paymentDTOK);
+            handlers.handleOperation(paymentDTOK);
 
     }
 
-    public void handleSaga(WarehuseDTOK warehuseDTOK) {
+    public void handleWarehuseDTOK(WarehuseDTOK warehuseDTOK) {
         if (validationForWarehouse(warehuseDTOK))
-            handleOperation(warehuseDTOK);
+            handlers.handleOperation(warehuseDTOK);
     }
 
-    public void handleSaga(TransporterDTOK transporterDTOK) {
+    public void handleTransporterDTOK(TransporterDTOK transporterDTOK) {
         if (validationForTransport(transporterDTOK))
-            handleOperation(transporterDTOK);
-    }
-
-    private void handleOperation(PaymentDTOK paymentDTOK) {
-        log.info("handleOperation(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
-    }
-
-    private void handleOperation(TransporterDTOK transporterDTOK) {
-        log.info("handleOperation(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
-
-    }
-
-    private void handleOperation(WarehuseDTOK warehuseDTOK) {
-        log.info("handleOperation(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
-
-    }
-
-    private void handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) {
-        log.error("handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
-    }
-
-    private void handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) {
-        log.error("handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
-    }
-
-    private void handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) {
-        log.error("handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
+            handlers.handleOperation(transporterDTOK);
     }
 
     private boolean shouldCompensate(String eventId) {
@@ -87,28 +60,28 @@ public class SagaService {
     }
 
     private void handle(OrderDTOK orderDTOK, boolean b) {
-        TransporterDTOK transporterDTOK = new TransporterDTOK(orderDTOK, b);
-        WarehuseDTOK warehuseDTOK = new WarehuseDTOK(orderDTOK, b);
-        PaymentDTOK paymentDTOK = new PaymentDTOK(orderDTOK, b);
-        kafkaTemplate.send(MAIN_TOPIC, new KafkaMessage<>("transport", transporterDTOK));
-        kafkaTemplate.send(MAIN_TOPIC, new KafkaMessage<>("warehouse", warehuseDTOK));
-        kafkaTemplate.send(MAIN_TOPIC, new KafkaMessage<>("payment", paymentDTOK));
+        TransporterDTOK transporterDTOK = new TransporterDTOK(orderDTOK, b, getSomeAdditionalData());
+        WarehuseDTOK warehuseDTOK = new WarehuseDTOK(orderDTOK, b, getSomeAdditionalData());
+        PaymentDTOK paymentDTOK = new PaymentDTOK(orderDTOK, b, getSomeAdditionalData());
+        kafkaTemplate.send(MAIN_TOPIC, transporterDTOK);
+        kafkaTemplate.send(MAIN_TOPIC, warehuseDTOK);
+        kafkaTemplate.send(MAIN_TOPIC, paymentDTOK);
+    }
+
+    private String getSomeAdditionalData() {
+        return "something additional";
     }
 
 
     private void beginCompensation(OrderDTOK order) {
-        kafkaTemplate.send(MAIN_TOPIC, new KafkaMessage<>(
-                        ORDER_TYPE,
-                        OrderDTOK
-                                .builder()
-                                .amount(order.getAmount())
-                                .clientId(order.getClientId())
-                                .itemId(order.getItemId())
-                                .eventId(order.getEventId())
-                                .compensation(true)
-                                .build()
-                )
-        );
+        kafkaTemplate.send(MAIN_TOPIC,
+                new OrderDTOK(
+                        order.getEventId(),
+                        order.getClientId(),
+                        order.getPrice(),
+                        order.getQuantity(),
+                        order.getItem(),
+                        true));
     }
 
     private boolean validationForTransport(TransporterDTOK transporterDTOK) {
@@ -118,7 +91,7 @@ public class SagaService {
             return false;
         }
         if (transporterDTOK.getCompensation()) {
-            handleFailoverTransporterDTOK(transporterDTOK);
+            handlers.handleFailoverTransporterDTOK(transporterDTOK);
             return false;
         }
         return true;
@@ -131,7 +104,7 @@ public class SagaService {
             return false;
         }
         if (warehuseDTOK.getCompensation()) {
-            handleFailoverWarehuseDTOK(warehuseDTOK);
+            handlers.handleFailoverWarehuseDTOK(warehuseDTOK);
             return false;
         }
         return true;
@@ -144,7 +117,7 @@ public class SagaService {
             return false;
         }
         if (paymentDTOK.getCompensation()) {
-            handleFailoverPaymentDTOK(paymentDTOK);
+            handlers.handleFailoverPaymentDTOK(paymentDTOK);
             return false;
         }
         return true;

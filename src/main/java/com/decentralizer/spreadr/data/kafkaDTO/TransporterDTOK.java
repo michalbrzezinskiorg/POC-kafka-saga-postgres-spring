@@ -1,14 +1,18 @@
 package com.decentralizer.spreadr.data.kafkaDTO;
 
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Value
-public class TransporterDTOK {
+@Data
+@NoArgsConstructor
+public class TransporterDTOK implements KafkaMessage {
     private OrderDTOK orderDTOK;
     private Boolean compensation;
+    private String someAdditionalData;
 
-    public TransporterDTOK(final OrderDTOK orderDTOK, final Boolean compensation) {
+    public TransporterDTOK(final OrderDTOK orderDTOK, final Boolean compensation, final String someAdditionalData) {
         this.orderDTOK = orderDTOK;
         this.compensation = compensation;
+        this.someAdditionalData = someAdditionalData;
     }
 }

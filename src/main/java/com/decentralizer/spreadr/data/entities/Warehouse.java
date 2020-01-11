@@ -1,0 +1,15 @@
+package com.decentralizer.spreadr.data.entities;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Warehouse {
+    private Integer id;
+    private Integer waitingItems;
+    private Integer Sold;
+    private String item;
+}

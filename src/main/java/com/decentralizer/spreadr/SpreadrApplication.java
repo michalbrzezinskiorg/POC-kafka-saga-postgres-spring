@@ -11,6 +11,7 @@ import java.util.UUID;
 public class SpreadrApplication {
 
     public static final String INSTANCE_ID;
+    public static final String MAIN_TOPIC = "morph";
 
     static {
         INSTANCE_ID = Base64.getEncoder()
