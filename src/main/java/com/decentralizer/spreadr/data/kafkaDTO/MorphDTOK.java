@@ -6,7 +6,7 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class MorphDTOK {
+public class MorphDTOK implements KafkaMessage {
     private Long id;
     @NotNull
     private String uuid;

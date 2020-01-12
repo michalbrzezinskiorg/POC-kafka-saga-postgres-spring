@@ -2,7 +2,7 @@ package com.decentralizer.spreadr.listener;
 
 import com.decentralizer.spreadr.data.kafkaDTO.*;
 import com.decentralizer.spreadr.service.MorphService;
-import com.decentralizer.spreadr.service.SagaService;
+import com.decentralizer.spreadr.service.SagaOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaHandler;
@@ -18,35 +18,35 @@ import static com.decentralizer.spreadr.service.MorphService.MAIN_TOPIC;
 public class KafkaListenerDispatcher {
 
     private final MorphService morphService;
-    private SagaService sagaService;
+    private SagaOrchestrator sagaOrchestrator;
 
     @KafkaHandler
-    public void listenMorphDTOK(KafkaMessage<MorphDTOK> message) {
+    public void listenMorphDTOK(MorphDTOK message) {
         log.info("Received message in listenMorphDTOK: " + message);
-        morphService.saveToDb(message.getPayload());
+        morphService.saveToDb(message);
     }
 
     @KafkaHandler
-    public void listenSagaDTOK(KafkaMessage<OrderDTOK> message) {
+    public void listenSagaDTOK(OrderDTOK message) {
         log.info("Received message in listenSagaDTOK: " + message);
-        sagaService.handleSaga(message.getPayload());
+        sagaOrchestrator.handleOrder(message);
     }
 
     @KafkaHandler
-    public void listenPaymentDTOK(KafkaMessage<PaymentDTOK> message) {
+    public void listenPaymentDTOK(PaymentDTOK message) {
         log.info("Received message in listenPaymentDTOK: " + message);
-        sagaService.handleSaga(message.getPayload());
+        sagaOrchestrator.handleOrder(message);
     }
 
     @KafkaHandler
-    public void listenWarehuseDTOK(KafkaMessage<WarehuseDTOK> message) {
+    public void listenWarehuseDTOK(WarehuseDTOK message) {
         log.info("Received message in listenPaymentDTOK: " + message);
-        sagaService.handleSaga(message.getPayload());
+        sagaOrchestrator.handleOrder(message);
     }
 
     @KafkaHandler
-    public void listenTransporterDTOK(KafkaMessage<TransporterDTOK> message) {
+    public void listenTransporterDTOK(TransporterDTOK message) {
         log.info("Received message in listenPaymentDTOK: " + message);
-        sagaService.handleSaga(message.getPayload());
+        sagaOrchestrator.handleOrder(message);
     }
 }

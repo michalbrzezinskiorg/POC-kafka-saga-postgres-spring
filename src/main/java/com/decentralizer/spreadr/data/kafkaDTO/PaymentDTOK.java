@@ -3,7 +3,7 @@ package com.decentralizer.spreadr.data.kafkaDTO;
 import lombok.Value;
 
 @Value
-public class PaymentDTOK {
+public class PaymentDTOK implements KafkaMessage {
     private OrderDTOK orderDTOK;
     private Boolean compensation;
 

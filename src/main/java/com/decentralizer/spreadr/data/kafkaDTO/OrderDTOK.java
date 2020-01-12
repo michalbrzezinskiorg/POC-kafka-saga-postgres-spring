@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class OrderDTOK {
+public class OrderDTOK implements KafkaMessage {
     private String eventId;
     private String clientId;
     private String amount;

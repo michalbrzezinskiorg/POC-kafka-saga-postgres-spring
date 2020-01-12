@@ -3,7 +3,7 @@ package com.decentralizer.spreadr.data.kafkaDTO;
 import lombok.Value;
 
 @Value
-public class TransporterDTOK {
+public class TransporterDTOK implements KafkaMessage {
     private OrderDTOK orderDTOK;
     private Boolean compensation;
 

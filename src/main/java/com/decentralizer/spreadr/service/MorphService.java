@@ -4,7 +4,6 @@ import com.decentralizer.spreadr.data.MorphRepository;
 import com.decentralizer.spreadr.data.entities.Morph;
 import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
-import com.decentralizer.spreadr.data.requestDTO.RequestMorph;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -32,21 +31,13 @@ public class MorphService {
         saveToDb(morph);
     }
 
-    public void sendOnKafka(RequestMorph requestMorph) {
-        MorphDTOK morphDTOK = modelMapper.map(requestMorph, MorphDTOK.class);
-        sendOnKafka(morphDTOK);
-    }
-
     public void saveToDb(Morph morph) {
         morphRepository.save(morph);
     }
 
     public void sendOnKafka(MorphDTOK morphDTOK) {
-        KafkaMessage kafkaMessage = new KafkaMessage();
-        kafkaMessage.setType(MAIN_TOPIC);
-        kafkaMessage.setPayload(morphDTOK);
         ListenableFuture<SendResult<String, KafkaMessage>> handler
-                = morphDTOKKafkaTemplate.send(MAIN_TOPIC, kafkaMessage);
+                = morphDTOKKafkaTemplate.send(MAIN_TOPIC, morphDTOK);
         addCallback(handler);
     }
 

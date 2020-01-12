@@ -8,7 +8,6 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Data
 public class Morph {
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;

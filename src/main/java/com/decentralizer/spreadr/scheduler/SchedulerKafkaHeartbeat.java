@@ -1,10 +1,9 @@
 package com.decentralizer.spreadr.scheduler;
 
-import com.decentralizer.spreadr.data.kafkaDTO.KafkaMessage;
 import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
 import com.decentralizer.spreadr.data.kafkaDTO.OrderDTOK;
 import com.decentralizer.spreadr.service.MorphService;
-import com.decentralizer.spreadr.service.SagaService;
+import com.decentralizer.spreadr.service.SagaOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -15,7 +14,6 @@ import java.util.Random;
 import java.util.UUID;
 
 import static com.decentralizer.spreadr.SpreadrApplication.INSTANCE_ID;
-import static com.decentralizer.spreadr.service.SagaService.ORDER_TYPE;
 
 @Component
 @EnableScheduling
@@ -24,8 +22,7 @@ import static com.decentralizer.spreadr.service.SagaService.ORDER_TYPE;
 public class SchedulerKafkaHeartbeat {
 
     private final MorphService morphService;
-    private SagaService sagaService;
-
+    private final SagaOrchestrator sagaOrchestrator;
 
     private long counter;
 
@@ -36,9 +33,6 @@ public class SchedulerKafkaHeartbeat {
         morph.setFrom(INSTANCE_ID);
         morph.setTo(UUID.randomUUID().toString());
         morph.setUuid(UUID.randomUUID().toString());
-        KafkaMessage<MorphDTOK> kafkaMessage = new KafkaMessage<>();
-        kafkaMessage.setPayload(morph);
-        kafkaMessage.setType("morph");
         if (counter++ > 3) {
             try {
                 morphService.sendOnKafka(morph);
@@ -57,12 +51,9 @@ public class SchedulerKafkaHeartbeat {
                 .eventId(UUID.randomUUID().toString())
                 .compensation(false)
                 .build();
-        KafkaMessage<OrderDTOK> kafkaMessage = new KafkaMessage<>();
-        kafkaMessage.setPayload(orderDTOK);
-        kafkaMessage.setType(ORDER_TYPE);
         if (counter++ > 3) {
             try {
-                sagaService.sendInitOrderOnKafka(orderDTOK);
+                sagaOrchestrator.sendInitOrderOnKafka(orderDTOK);
             } catch (RuntimeException e) {
                 log.error("InterruptedException {}", e.getMessage());
             }

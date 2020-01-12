@@ -10,7 +10,7 @@ import javax.ws.rs.Path;
 public class ControllerExample {
 
     @GetMapping("aaaa")
-    public String asdas(){
+    public String asdas() {
         return "asasas";
     }
 

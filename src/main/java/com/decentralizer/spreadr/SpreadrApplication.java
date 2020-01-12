@@ -19,7 +19,7 @@ public class SpreadrApplication {
                                 + "_runtimeId:" + UUID.randomUUID()
                                 + "_runtimeZonedDateTime:"
                                 + ZonedDateTime.now().toString())
-                        .getBytes()
+                                .getBytes()
                 );
     }
 
