@@ -1,8 +1,8 @@
 package com.decentralizer.spreadr.listener;
 
 import com.decentralizer.spreadr.data.kafkaDTO.*;
+import com.decentralizer.spreadr.saga.SagaOrchestrator;
 import com.decentralizer.spreadr.service.MorphService;
-import com.decentralizer.spreadr.service.SagaOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaHandler;
@@ -18,7 +18,7 @@ import static com.decentralizer.spreadr.service.MorphService.MAIN_TOPIC;
 public class KafkaListenerDispatcher {
 
     private final MorphService morphService;
-    private SagaOrchestrator sagaOrchestrator;
+    private final SagaOrchestrator sagaOrchestrator;
 
     @KafkaHandler
     public void listenMorphDTOK(MorphDTOK message) {

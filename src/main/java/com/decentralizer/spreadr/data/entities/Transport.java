@@ -19,4 +19,5 @@ public class Transport {
     private List<OrderItem> orderItem;
     @OneToOne
     private Order order;
+    private Boolean canceled;
 }

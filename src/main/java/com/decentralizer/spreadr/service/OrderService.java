@@ -1,24 +1,18 @@
 package com.decentralizer.spreadr.service;
 
-import com.decentralizer.spreadr.data.ClientRepository;
-import com.decentralizer.spreadr.data.OrderRepository;
-import com.decentralizer.spreadr.data.PaymentRepository;
-import com.decentralizer.spreadr.data.WarehouseRepository;
+import com.decentralizer.spreadr.data.TransportRepository;
 import com.decentralizer.spreadr.data.entities.Client;
-import com.decentralizer.spreadr.data.entities.Order;
 import com.decentralizer.spreadr.data.entities.Payment;
-import com.decentralizer.spreadr.data.entities.Warehouse;
-import com.decentralizer.spreadr.data.kafkaDTO.OrderDTOK;
+import com.decentralizer.spreadr.data.entities.Transport;
 import com.decentralizer.spreadr.data.kafkaDTO.PaymentDTOK;
 import com.decentralizer.spreadr.data.kafkaDTO.TransporterDTOK;
 import com.decentralizer.spreadr.data.kafkaDTO.WarehuseDTOK;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jvnet.hk2.annotations.Service;
+import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -26,51 +20,55 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final PaymentRepository paymentRepository;
-    private final WarehouseRepository warehouseRepository;
-    private final ClientRepository clientRepository;
-    private final OrderRepository orderRepository;
+    private final PaymentService paymentService;
+    private final TransportService transportService;
+    private final TransportRepository transportRepository;
 
-    void handleOperation(PaymentDTOK paymentDTOK) {
+    public void handleOperation(PaymentDTOK paymentDTOK) {
         log.info("handleOperation(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
         Payment payment = new Payment();
-        OrderDTOK orderDTOK = paymentDTOK.getOrderDTOK();
-        payment.setAmount(new BigDecimal(orderDTOK.getAmount()));
-        Optional<Client> client = clientRepository.findByName(orderDTOK.getClientId());
-        if (client.isEmpty())
-            throw new RuntimeException("no such client");
-        payment.setClient(client.get());
-        Optional<Warehouse> warehouse = warehouseRepository.findByClient(client.get());
-        if (warehouse.isEmpty())
-            throw new RuntimeException("no such warehouse");
-        payment.setWarehouse(warehouse.get());
-        Order order = new Order();
-        order.setClient(client.get());
-        order.setCompensation(paymentDTOK.getCompensation());
-        payment.setOrder(orderRepository.save(order));
-        paymentRepository.save(payment);
+        Client client = paymentService.setClientToPayment(payment, paymentDTOK.getOrderDTOK());
+        paymentService.setWarehouseToPayment(payment, client);
+        paymentService.createOrder(payment, client, paymentDTOK);
+        payment.setAmount(new BigDecimal(paymentDTOK.getOrderDTOK().getTotalPrice()));
+        paymentService.savePayment(payment);
     }
 
-    void handleOperation(TransporterDTOK transporterDTOK) {
+    public Transport handleOperation(TransporterDTOK transporterDTOK) {
         log.info("handleOperation(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
-
+        Transport transport = new Transport();
+        Client client = transportService.setAndReturnClient(transporterDTOK, transport);
+        transportService.setAndReturnWarehouse(transport, client);
+        transportService.setAndReturnOrder(transporterDTOK, transport, client);
+        transportService.setAndReturnItem(transporterDTOK, transport);
+        transport.setCanceled(transporterDTOK.getCompensation());
+        return transportRepository.save(transport);
     }
 
-    void handleOperation(WarehuseDTOK warehuseDTOK) {
+    public void handleOperation(WarehuseDTOK warehuseDTOK) {
         log.info("handleOperation(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
 
     }
 
-    void handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) {
-        log.error("handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
+    public void handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) {
+        log.info("handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
+        Transport transport = transportRepository.findByOrderId(transporterDTOK.getOrderDTOK().getEventId()).orElse(handleOperation(transporterDTOK));
+        transport.setCanceled(transporterDTOK.getCompensation());
+        transportRepository.save(transport);
     }
 
-    void handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) {
-        log.error("handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
+    public void handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) {
+        log.info("handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
     }
 
-    void handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) {
-        log.error("handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
+    public void handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) {
+        log.info("handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
+        Payment payment = new Payment();
+        Client client = paymentService.setClientToPayment(payment, paymentDTOK.getOrderDTOK());
+        paymentService.setWarehouseToPayment(payment, client);
+        paymentService.createOrder(payment, client, paymentDTOK);
+        payment.setAmount(new BigDecimal(paymentDTOK.getOrderDTOK().getTotalPrice()).multiply(BigDecimal.valueOf(-1L)));
+        paymentService.savePayment(payment);
     }
 
 }

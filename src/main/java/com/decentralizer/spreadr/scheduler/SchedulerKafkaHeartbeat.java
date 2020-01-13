@@ -2,8 +2,8 @@ package com.decentralizer.spreadr.scheduler;
 
 import com.decentralizer.spreadr.data.kafkaDTO.MorphDTOK;
 import com.decentralizer.spreadr.data.kafkaDTO.OrderDTOK;
+import com.decentralizer.spreadr.saga.SagaOrchestrator;
 import com.decentralizer.spreadr.service.MorphService;
-import com.decentralizer.spreadr.service.SagaOrchestrator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -47,7 +47,8 @@ public class SchedulerKafkaHeartbeat {
         OrderDTOK orderDTOK = OrderDTOK.builder()
                 .itemId("TEST")
                 .clientId(INSTANCE_ID)
-                .amount(String.valueOf(new Random().nextFloat()))
+                .totalPrice(new Random(100).nextDouble())
+                .quantity(new Random(10).nextInt())
                 .eventId(UUID.randomUUID().toString())
                 .compensation(false)
                 .build();

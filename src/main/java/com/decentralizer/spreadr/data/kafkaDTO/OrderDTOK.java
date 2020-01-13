@@ -1,14 +1,19 @@
 package com.decentralizer.spreadr.data.kafkaDTO;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Value
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderDTOK implements KafkaMessage {
     private String eventId;
     private String clientId;
-    private String amount;
+    private Double totalPrice;
+    private Integer quantity;
     private String itemId;
     private Boolean compensation;
 }
