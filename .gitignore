@@ -30,6 +30,9 @@ build/
 
 /postgres_data
 /kafka
+/resources
 
 ### VS Code ###
 .vscode/
+initdb/
+resources/
