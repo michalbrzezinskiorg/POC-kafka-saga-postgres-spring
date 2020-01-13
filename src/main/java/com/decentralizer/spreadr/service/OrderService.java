@@ -50,18 +50,21 @@ public class OrderService {
 
     }
 
-    public void handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) {
+    public void handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK, boolean shouldCompensate) {
+        if (!shouldCompensate) return;
         log.info("handleFailoverTransporterDTOK(TransporterDTOK transporterDTOK) [{}]", transporterDTOK);
         Transport transport = transportRepository.findByOrderId(transporterDTOK.getOrderDTOK().getEventId()).orElse(handleOperation(transporterDTOK));
         transport.setCanceled(transporterDTOK.getCompensation());
         transportRepository.save(transport);
     }
 
-    public void handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) {
+    public void handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK, boolean shouldCompensate) {
+        if (!shouldCompensate) return;
         log.info("handleFailoverWarehuseDTOK(WarehuseDTOK warehuseDTOK) [{}]", warehuseDTOK);
     }
 
-    public void handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) {
+    public void handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK, boolean shouldCompensate) {
+        if (!shouldCompensate) return;
         log.info("handleFailoverPaymentDTOK(PaymentDTOK paymentDTOK) [{}]", paymentDTOK);
         Payment payment = new Payment();
         Client client = paymentService.setClientToPayment(payment, paymentDTOK.getOrderDTOK());

@@ -16,4 +16,9 @@ public class MorphDTOK implements KafkaMessage {
     private String from;
     @Length(message = "needs to between 10 and 100", min = 10, max = 100)
     private String to;
+
+    @Override
+    public Boolean getCompensation() {
+        return false;
+    }
 }

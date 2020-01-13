@@ -1,5 +1,6 @@
 package com.decentralizer.spreadr.saga;
 
+import com.decentralizer.spreadr.data.entities.Warehouse;
 import com.decentralizer.spreadr.data.kafkaDTO.*;
 import com.decentralizer.spreadr.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,10 @@ import static com.decentralizer.spreadr.service.MorphService.MAIN_TOPIC;
 public class SagaOrchestrator {
     public static final String LACK_OF_VALIDATION = "lack of validation";
     private final KafkaTemplate<String, KafkaMessage> kafkaTemplate;
-    private final Map<String, LocalDateTime> compensations = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> compensationsProcessed = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> paymentsAccepted = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> warehouseAccepted = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> transportAccepted = new ConcurrentHashMap<>();
     private final OrderService orderService;
     private final EventsValidator eventsValidator;
 
@@ -34,27 +38,45 @@ public class SagaOrchestrator {
     }
 
     public void handleOrder(PaymentDTOK paymentDTOK) {
-        if (paymentDTOK.getCompensation())
-            orderService.handleFailoverPaymentDTOK(paymentDTOK);
-        else if (eventsValidator.validationForPayment(paymentDTOK)) {
-            orderService.handleOperation(paymentDTOK);
-        } else beginCompensation(paymentDTOK.getOrderDTOK(), LACK_OF_VALIDATION);
+        if (paymentDTOK.getCompensation()) {
+            boolean shouldCompensate = paymentsAccepted.containsKey(paymentDTOK.getOrderDTOK().getEventId());
+            orderService.handleFailoverPaymentDTOK(paymentDTOK, shouldCompensate);
+        } else if (eventsValidator.validationForPayment(paymentDTOK)) {
+            try {
+                orderService.handleOperation(paymentDTOK);
+                paymentsAccepted.put(paymentDTOK.getOrderDTOK().getEventId(), LocalDateTime.now());
+            } catch (Exception e) {
+                beginCompensation(paymentDTOK.getOrderDTOK(), e.getMessage(), PaymentDTOK.class);
+            }
+        } else beginCompensation(paymentDTOK.getOrderDTOK(), LACK_OF_VALIDATION, PaymentDTOK.class);
     }
 
     public void handleOrder(WarehuseDTOK warehuseDTOK) {
-        if (warehuseDTOK.getCompensation())
-            orderService.handleFailoverWarehuseDTOK(warehuseDTOK);
-        else if (eventsValidator.validationForWarehouse(warehuseDTOK)) {
-            orderService.handleOperation(warehuseDTOK);
-        } else beginCompensation(warehuseDTOK.getOrderDTOK(), LACK_OF_VALIDATION);
+        if (warehuseDTOK.getCompensation()) {
+            boolean shouldCompensate = warehouseAccepted.containsKey(warehuseDTOK.getOrderDTOK().getEventId());
+            orderService.handleFailoverWarehuseDTOK(warehuseDTOK, shouldCompensate);
+        } else if (eventsValidator.validationForWarehouse(warehuseDTOK)) {
+            try {
+                orderService.handleOperation(warehuseDTOK);
+                warehouseAccepted.put(warehuseDTOK.getOrderDTOK().getEventId(), LocalDateTime.now());
+            } catch (Exception e) {
+                beginCompensation(warehuseDTOK.getOrderDTOK(), e.getMessage(), Warehouse.class);
+            }
+        } else beginCompensation(warehuseDTOK.getOrderDTOK(), LACK_OF_VALIDATION, Warehouse.class);
     }
 
     public void handleOrder(TransporterDTOK transporterDTOK) {
-        if (transporterDTOK.getCompensation())
-            orderService.handleFailoverTransporterDTOK(transporterDTOK);
-        else if (eventsValidator.validationForTransport(transporterDTOK)) {
-            orderService.handleOperation(transporterDTOK);
-        } else beginCompensation(transporterDTOK.getOrderDTOK(), LACK_OF_VALIDATION);
+        if (transporterDTOK.getCompensation()) {
+            boolean shouldCompensate = transportAccepted.containsKey(transporterDTOK.getOrderDTOK().getEventId());
+            orderService.handleFailoverTransporterDTOK(transporterDTOK, shouldCompensate);
+        } else if (eventsValidator.validationForTransport(transporterDTOK)) {
+            try {
+                orderService.handleOperation(transporterDTOK);
+                transportAccepted.put(transporterDTOK.getOrderDTOK().getEventId(), LocalDateTime.now());
+            } catch (Exception e) {
+                beginCompensation(transporterDTOK.getOrderDTOK(), e.getMessage(), TransporterDTOK.class);
+            }
+        } else beginCompensation(transporterDTOK.getOrderDTOK(), LACK_OF_VALIDATION, TransporterDTOK.class);
     }
 
     public void handleCompensation(OrderDTOK orderDTOK) {
@@ -63,9 +85,10 @@ public class SagaOrchestrator {
     }
 
     private boolean shouldCompensateOrItWasAlreadyCompensated(String eventId) {
-        boolean res = !compensations.containsKey(eventId);
+        boolean res = !compensationsProcessed.containsKey(eventId);
         if (!res)
-            log.error("found {} duplicates of compensation process... should we handle it somehow?", compensations.size());
+            log.error("found {} duplicates of compensation process... should we handle it somehow?", compensationsProcessed.size());
+        compensationsProcessed.put(eventId, LocalDateTime.now());
         return res;
     }
 
@@ -79,8 +102,8 @@ public class SagaOrchestrator {
     }
 
 
-    private void beginCompensation(OrderDTOK order, String cause) {
-        log.error(cause);
+    private void beginCompensation(OrderDTOK order, String cause, Class className) {
+        log.error(cause + " [{}] ", className);
         kafkaTemplate.send(MAIN_TOPIC,
                 OrderDTOK
                         .builder()
